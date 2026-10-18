@@ -3,7 +3,7 @@ using UnityEngine.InputSystem; // Required for the new Input System
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 10f;
+    public float speed = 5f;
     public Transform cameraTransform; // Drag your Main Camera here in the Inspector
     
     private Rigidbody rb;

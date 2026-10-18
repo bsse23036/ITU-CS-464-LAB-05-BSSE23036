@@ -3,53 +3,62 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public int score = 0;
+    public int normalScore = 0;
+    public int maxNormalCoins = 10;
+    
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI bonusText;
+    public TextMeshProUGUI gameOverText;
     
     public GameObject coinPrefab;     
     public GameObject redCoinPrefab;  
     public GameObject blueCoinPrefab; 
     
-    public int initialCoinCount = 8;
-    public float spawnRangeX = 7.0f;  // Keep slightly inside your arena walls
+    public float spawnRangeX = 7.0f;  
     public float spawnRangeZ = 7.0f;  
 
-    private int randomSpawnScore;
+    private int randomRedSpawnScore;
     private bool redCoinSpawned = false;
     
     private int bonusCoinsCollected = 0;
     private int totalBonusCoins = 50;
+    private bool isGameOver = false;
 
     void Start()
     {
         UpdateScoreText();
         
         if (bonusText != null) bonusText.gameObject.SetActive(false);
+        if (gameOverText != null) gameOverText.gameObject.SetActive(false);
 
-        // Pick a random score threshold between 1 and 10 for the Red Coin
-        randomSpawnScore = Random.Range(1, 11);
-        Debug.Log($"Red Coin will spawn when score reaches: {randomSpawnScore}");
+        // Pick a random threshold between 1 and 9 for the Red Coin to spawn in between
+        randomRedSpawnScore = Random.Range(1, maxNormalCoins);
+        Debug.Log($"Red Coin will spawn when normal score reaches: {randomRedSpawnScore}");
 
-        // Spawn initial normal coins
-        for (int i = 0; i < initialCoinCount; i++)
+        // Spawn exactly 10 normal coins at the start
+        for (int i = 0; i < maxNormalCoins; i++)
         {
             SpawnCoin();
         }
     }
 
-    public void AddScore(int amount)
+    public void AddNormalCoinScore()
     {
-        score += amount;
+        if (isGameOver) return;
+
+        normalScore++;
         UpdateScoreText();
 
-        // Always spawn a replacement normal coin when a normal coin is collected
-        SpawnCoin();
-
-        // Check if we hit the random threshold for the Red Coin (and hasn't spawned yet)
-        if (!redCoinSpawned && score >= randomSpawnScore)
+        // Check if it's time to spawn the Red Coin randomly in between
+        if (!redCoinSpawned && normalScore == randomRedSpawnScore)
         {
             SpawnRedCoin();
+        }
+
+        // Check if game is over (all 10 normal coins collected)
+        if (normalScore >= maxNormalCoins)
+        {
+            TriggerGameOver();
         }
     }
 
@@ -72,9 +81,9 @@ public class GameManager : MonoBehaviour
         if (redCoinPrefab != null)
         {
             Vector3 randomPos = new Vector3(
-                Random.Range(-4f, 4f), 
+                Random.Range(-3f, 3f), 
                 0.5f, 
-                Random.Range(-4f, 4f)
+                Random.Range(-3f, 3f)
             );
             Instantiate(redCoinPrefab, randomPos, Quaternion.identity);
             Debug.Log("Red Coin Spawned in the arena!");
@@ -119,13 +128,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void TriggerGameOver()
+    {
+        isGameOver = true;
+        Debug.Log("Game Over! All 10 normal coins collected.");
+        
+        if (gameOverText != null)
+        {
+            gameOverText.gameObject.SetActive(true);
+            gameOverText.text = "You Win! All 10 Coins Collected!";
+        }
+    }
+
     void UpdateScoreText()
     {
-        if (scoreText != null) scoreText.text = "Score: " + score.ToString();
+        if (scoreText != null) scoreText.text = "Score: " + normalScore + " / " + maxNormalCoins;
     }
 
     void UpdateBonusText()
     {
-        if (bonusText != null) bonusText.text = "Bonus Coins: " + bonusCoinsCollected + "/" + totalBonusCoins;
+        if (bonusText != null) bonusText.text = "Bonus Coins: " + bonusCoinsCollected + " / " + totalBonusCoins;
     }
 }
